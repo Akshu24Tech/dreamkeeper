@@ -1,0 +1,84 @@
+[
+    {
+        "content": "User prefers Python for all backend projects",
+        "metadata": {"topic": "language_preference"},
+        "created_days_ago": 60
+    },
+    {
+        "content": "The user likes Python for backend development",
+        "metadata": {"topic": "language_preference"},
+        "created_days_ago": 45,
+        "_note": "DUPLICATE of #1 — same fact, different words"
+    },
+    {
+        "content": "User's preferred backend language is Python",
+        "metadata": {"topic": "language_preference"},
+        "created_days_ago": 30,
+        "_note": "DUPLICATE of #1 and #2 — triple dup"
+    },
+    {
+        "content": "User lives in Lisbon, Portugal",
+        "metadata": {"topic": "location"},
+        "created_days_ago": 90
+    },
+    {
+        "content": "User recently moved to Berlin, Germany",
+        "metadata": {"topic": "location"},
+        "created_days_ago": 10,
+        "_note": "CONTRADICTION — supersedes #4"
+    },
+    {
+        "content": "User uses PostgreSQL for the main database",
+        "metadata": {"topic": "database"},
+        "created_days_ago": 120
+    },
+    {
+        "content": "User switched to CockroachDB for multi-region support",
+        "metadata": {"topic": "database"},
+        "created_days_ago": 15,
+        "_note": "CONTRADICTION — supersedes #6"
+    },
+    {
+        "content": "User attended a LangChain workshop in March",
+        "metadata": {"topic": "events"},
+        "created_days_ago": 150
+    },
+    {
+        "content": "User completed the LangGraph certification",
+        "metadata": {"topic": "events"},
+        "created_days_ago": 100
+    },
+    {
+        "content": "User built a RAG pipeline using LangChain and ChromaDB",
+        "metadata": {"topic": "projects"},
+        "created_days_ago": 80
+    },
+    {
+        "content": "User shipped a production LangGraph agent for code review",
+        "metadata": {"topic": "projects"},
+        "created_days_ago": 20
+    },
+    {
+        "content": "User is interested in memory systems for AI agents",
+        "metadata": {"topic": "interests"},
+        "created_days_ago": 50
+    },
+    {
+        "content": "User reads papers on agent memory consolidation",
+        "metadata": {"topic": "interests"},
+        "created_days_ago": 5,
+        "_note": "CLUSTER candidate with #12 — could synthesize into interest pattern"
+    },
+    {
+        "content": "User prefers dark mode in all applications",
+        "metadata": {"topic": "ui_preference"},
+        "created_days_ago": 200,
+        "_note": "STALE — very old, never accessed"
+    },
+    {
+        "content": "Team standup is at 9am IST daily",
+        "metadata": {"topic": "schedule"},
+        "created_days_ago": 180,
+        "_note": "STALE — old schedule, likely outdated"
+    }
+]
