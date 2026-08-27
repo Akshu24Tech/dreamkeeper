@@ -1,6 +1,6 @@
 # DreamKeeper
 
-**The open-source "dreaming" pass for AI agent memory — merges duplicates, supersedes stale facts, synthesizes patterns. Nothing is ever destroyed.**
+**The open-source "dreaming" pass for AI agent memory: merges duplicates, supersedes stale facts, synthesizes patterns. Nothing is ever destroyed.**
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Pipeline-orange.svg)](https://github.com/langchain-ai/langgraph)
@@ -15,7 +15,7 @@ A long-running agent gets *worse* at remembering facts over time.
 
 As the memory store grows, the same preference is saved four different ways, last month's decision still contradicts this month's, and every retrieval is now scoring a pile of half-stale, half-duplicate entries. **The store grows and recall degrades with it.**
 
-OpenAI, Anthropic, Google, and Mem0 all ship "dreaming" — a background consolidation pass — but **there is no open-source, pluggable, framework-agnostic version** you can drop into your own agent pipeline.
+OpenAI, Anthropic, Google, and Mem0 all ship "dreaming" - a background consolidation pass - but **there is no open-source, pluggable, framework-agnostic version** you can drop into your own agent pipeline.
 
 **DreamKeeper is that missing piece.**
 
@@ -27,12 +27,12 @@ A LangGraph-powered agent that runs a scheduled "dream cycle" over any memory st
 ┌─────────────────────────────────────────────────────────────┐
 │                      DREAM CYCLE                            │
 │                                                             │
-│  SCAN → DETECT → PLAN → [APPROVE] → EXECUTE → REPORT       │
+│  SCAN -> DETECT -> PLAN -> [APPROVE] -> EXECUTE -> REPORT   │
 │                                                             │
 │  Three operations:                                          │
-│  🔵 MERGE      — collapse duplicates into one canonical     │
-│  🟡 SUPERSEDE  — flag stale facts, link to replacement      │
-│  🟣 SYNTHESIZE — distill clusters into higher-order memory  │
+│  🔵 MERGE      : collapse duplicates into one canonical     │
+│  🟡 SUPERSEDE  : flag stale facts, link to replacement      │
+│  🟣 SYNTHESIZE : distill clusters into higher-order memory  │
 │                                                             │
 │  Every change = a DIFF you can read, trace, and undo        │
 │  Every synthesis = CITES its source memories                │
@@ -119,15 +119,15 @@ curl http://localhost:8000/dream/{dream_id}
 ### Pipeline Architecture
 
 ```
-scan → detect → plan → [human_review] → execute → report
+scan -> detect -> plan -> [human_review] -> execute -> report
 ```
 
 | Node | What it does |
 |---|---|
 | **Scan** | Load all active memories, compute pairwise similarities, cluster by semantic proximity |
 | **Detect** | Find duplicates (same fact, different words), contradictions (conflicting facts), stale entries (old + never accessed), synthesis candidates (related cluster) |
-| **Plan** | Generate a consolidation plan — the diff preview with target content, reasons, and citations |
-| **Execute** | Apply merges/supersedes/syntheses to the store. **Nothing is ever deleted** — old memories are flagged and linked to their replacement |
+| **Plan** | Generate a consolidation plan: the diff preview with target content, reasons, and citations |
+| **Execute** | Apply merges/supersedes/syntheses to the store. **Nothing is ever deleted**: old memories are flagged and linked to their replacement |
 | **Report** | Assemble the dream report: what changed, why, with full audit trail |
 
 ### Design Principles
@@ -208,8 +208,8 @@ uv run pytest tests/ -v
 
 ## Inspired By
 
-- [OpenAI: Dreaming — Better memory for a more helpful ChatGPT (June 2026)](https://openai.com/index/chatgpt-memory-dreaming/)
-- [Anthropic: New in Claude Managed Agents — Dreaming (May 2026)](https://claude.com/blog/new-in-claude-managed-agents)
+- [OpenAI: Dreaming - Better memory for a more helpful ChatGPT (June 2026)](https://openai.com/index/chatgpt-memory-dreaming/)
+- [Anthropic: New in Claude Managed Agents - Dreaming (May 2026)](https://claude.com/blog/new-in-claude-managed-agents)
 - [Google: Gemini Agent Platform Memory Bank](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/memory-bank)
 - [Mem0: Dream](https://docs.mem0.ai/platform/features/dream)
 - [Auto-Dreamer: Learning Offline Memory Consolidation (Ye et al.)](https://arxiv.org/abs/2605.20616)
@@ -219,4 +219,4 @@ uv run pytest tests/ -v
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT - see [LICENSE](LICENSE).

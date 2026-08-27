@@ -1,7 +1,7 @@
 [project]
 name = "dreamkeeper"
 version = "0.1.0"
-description = "Open-source memory consolidation agent — the 'dreaming' pass that merges, supersedes, and synthesizes agent memories."
+description = "Open-source memory consolidation agent the 'dreaming' pass that merges, supersedes, and synthesizes agent memories."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"
