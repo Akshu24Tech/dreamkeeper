@@ -1,4 +1,4 @@
-"""DreamKeeper — Interactive Demo
+"""DreamKeeper - Interactive Demo
 
 Seeds a ChromaDB store with 15 deliberately messy memories (duplicates,
 contradictions, stale entries), then runs a full dream cycle and prints
@@ -49,13 +49,13 @@ def _print_memory(mem: Memory, index: int):
     }.get(mem.status.value, "⚪")
     age_days = (datetime.now(timezone.utc) - mem.created_at).days
     print(f"  {status_icon} [{index+1:2d}] {mem.content}")
-    print(f"       Status: {mem.status.value} | Age: {age_days}d | Accesses: {mem.access_count}")
+    print(f"Status: {mem.status.value} | Age: {age_days}d | Accesses: {mem.access_count}")
     if mem.merged_into:
-        print(f"       → merged into {mem.merged_into[:8]}...")
+        print(f"merged into {mem.merged_into[:8]}...")
     if mem.superseded_by:
-        print(f"       → superseded by {mem.superseded_by[:8]}...")
+        print(f"superseded by {mem.superseded_by[:8]}...")
     if mem.synthesized_into:
-        print(f"       → synthesized into {mem.synthesized_into[:8]}...")
+        print(f"synthesized into {mem.synthesized_into[:8]}...")
     print()
 
 
@@ -69,12 +69,12 @@ def _print_report(report: DreamReport):
     print(f"  Actions executed: {report.actions_executed}")
     print()
 
-    print(f"  📊 Results:")
+    print(f"  Results:")
     print(f"     Merges:     {report.merges_applied}")
     print(f"     Supersedes: {report.supersedes_applied}")
     print(f"     Syntheses:  {report.syntheses_applied}")
     print()
-    print(f"  📉 Reduction: {report.memories_before} → {report.memories_after} active memories ({report.reduction_pct}% reduction)")
+    print(f"  Reduction: {report.memories_before} → {report.memories_after} active memories ({report.reduction_pct}% reduction)")
     print()
 
     if report.results:
@@ -84,12 +84,12 @@ def _print_report(report: DreamReport):
             print(f"  {icon} {r.operation.value.upper()}")
             print(f"     {r.diff}")
             if r.citations:
-                print(f"     📎 Cites: {', '.join(c[:8] + '...' for c in r.citations)}")
+                print(f"     Cites: {', '.join(c[:8] + '...' for c in r.citations)}")
             print()
 
 
 async def main():
-    _print_header("DreamKeeper — Demo")
+    _print_header("DreamKeeper - Demo")
     print("  Seeding 15 messy memories (duplicates, contradictions, stale)...")
     print()
 
@@ -127,7 +127,7 @@ async def main():
         await store.upsert(mem)
 
     # 3. Show the messy state
-    _print_header("BEFORE DREAMING — Memory Store")
+    _print_header("BEFORE DREAMING - Memory Store")
     all_memories = await store.load_all(status=None)
     for i, mem in enumerate(all_memories):
         _print_memory(mem, i)
@@ -135,7 +135,7 @@ async def main():
     print(f"  Total: {len(all_memories)} memories")
 
     # 4. Run the dream cycle
-    _print_header("💤 DREAMING...")
+    _print_header("DREAMING...")
     print("  Running: scan → detect → plan → execute → report")
     print()
 
@@ -149,7 +149,7 @@ async def main():
         print("  No consolidation was needed.")
 
     # 6. Show the clean state
-    _print_header("AFTER DREAMING — Memory Store")
+    _print_header("AFTER DREAMING - Memory Store")
     all_memories_after = await store.load_all(status=None)
     for i, mem in enumerate(all_memories_after):
         _print_memory(mem, i)

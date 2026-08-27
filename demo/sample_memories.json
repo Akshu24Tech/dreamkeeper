@@ -8,13 +8,13 @@
         "content": "The user likes Python for backend development",
         "metadata": {"topic": "language_preference"},
         "created_days_ago": 45,
-        "_note": "DUPLICATE of #1 — same fact, different words"
+        "_note": "DUPLICATE of #1 - same fact, different words"
     },
     {
         "content": "User's preferred backend language is Python",
         "metadata": {"topic": "language_preference"},
         "created_days_ago": 30,
-        "_note": "DUPLICATE of #1 and #2 — triple dup"
+        "_note": "DUPLICATE of #1 and #2 - triple dup"
     },
     {
         "content": "User lives in Lisbon, Portugal",
@@ -25,7 +25,7 @@
         "content": "User recently moved to Berlin, Germany",
         "metadata": {"topic": "location"},
         "created_days_ago": 10,
-        "_note": "CONTRADICTION — supersedes #4"
+        "_note": "CONTRADICTION - supersedes #4"
     },
     {
         "content": "User uses PostgreSQL for the main database",
@@ -36,7 +36,7 @@
         "content": "User switched to CockroachDB for multi-region support",
         "metadata": {"topic": "database"},
         "created_days_ago": 15,
-        "_note": "CONTRADICTION — supersedes #6"
+        "_note": "CONTRADICTION - supersedes #6"
     },
     {
         "content": "User attended a LangChain workshop in March",
@@ -67,18 +67,18 @@
         "content": "User reads papers on agent memory consolidation",
         "metadata": {"topic": "interests"},
         "created_days_ago": 5,
-        "_note": "CLUSTER candidate with #12 — could synthesize into interest pattern"
+        "_note": "CLUSTER candidate with #12 - could synthesize into interest pattern"
     },
     {
         "content": "User prefers dark mode in all applications",
         "metadata": {"topic": "ui_preference"},
         "created_days_ago": 200,
-        "_note": "STALE — very old, never accessed"
+        "_note": "STALE - very old, never accessed"
     },
     {
         "content": "Team standup is at 9am IST daily",
         "metadata": {"topic": "schedule"},
         "created_days_ago": 180,
-        "_note": "STALE — old schedule, likely outdated"
+        "_note": "STALE - old schedule, likely outdated"
     }
 ]
