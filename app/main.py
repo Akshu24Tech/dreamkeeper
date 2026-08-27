@@ -1,4 +1,4 @@
-"""DreamKeeper — FastAPI entry point.
+"""DreamKeeper: FastAPI entry point.
 
 Endpoints:
     POST  /dream                   Trigger a dream cycle
@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="DreamKeeper",
-    description="Memory consolidation agent — the 'dreaming' pass for AI agent memory stores.",
+    description="Memory consolidation agent - the 'dreaming' pass for AI agent memory stores.",
     version="0.1.0",
     lifespan=lifespan,
 )

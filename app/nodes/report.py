@@ -1,4 +1,4 @@
-"""REPORT node — Generate the dream report (audit artifact).
+"""REPORT node: Generate the dream report (audit artifact).
 
 Assembles the final DreamReport from the execution results.
 This is the output artifact: what changed, why, with full citations.

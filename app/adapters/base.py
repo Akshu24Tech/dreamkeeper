@@ -2,7 +2,7 @@
 
 Any vector DB or memory backend can be plugged into DreamKeeper by
 implementing this interface.  The dream cycle never touches the store
-directly — it always goes through an adapter.
+directly - it always goes through an adapter.
 """
 
 from __future__ import annotations

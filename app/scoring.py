@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from app.models import ImportanceScore, Memory
 
 
-# Default weights — tuneable via env or config
+# Default weights - tuneable via env or config
 WEIGHT_RELEVANCE = 0.30
 WEIGHT_FREQUENCY = 0.25
 WEIGHT_NOVELTY = 0.25
@@ -25,7 +25,7 @@ WEIGHT_RECENCY = 0.20
 HALF_LIFE_DAYS = 14.0
 
 
-def _recency_score(memory: Memory, now: datetime | None = None) -> float:
+def _recency_score(memory: Memory, now: datetime | None = None) -> float:     # How recent is this memory?
     """Exponential decay based on age.  Returns 1.0 for brand-new, ~0.5 at
     HALF_LIFE_DAYS, asymptotically approaching 0."""
     now = now or datetime.now(timezone.utc)
@@ -33,7 +33,7 @@ def _recency_score(memory: Memory, now: datetime | None = None) -> float:
     return math.exp(-0.693 * age_days / HALF_LIFE_DAYS)  # ln(2) ≈ 0.693
 
 
-def _frequency_score(memory: Memory, max_access: int = 1) -> float:
+def _frequency_score(memory: Memory, max_access: int = 1) -> float:     # How often is this memory accessed?
     """Normalised access count.  max_access should be the highest access_count
     in the current batch so the score is relative."""
     if max_access <= 0:

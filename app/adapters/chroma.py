@@ -17,7 +17,7 @@ from app.adapters.base import MemoryStoreAdapter
 from app.models import Memory, MemoryStatus
 
 
-# ChromaDB metadata only supports str/int/float/bool — so we serialise
+# ChromaDB metadata only supports str/int/float/bool - so we serialise
 # datetimes as ISO strings and status as its string value.
 
 def _memory_to_doc(memory: Memory) -> dict:

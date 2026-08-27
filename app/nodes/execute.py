@@ -1,4 +1,4 @@
-"""EXECUTE node — Apply the consolidation plan to the memory store.
+"""EXECUTE node: Apply the consolidation plan to the memory store.
 
 This is the only node that mutates the store.  Every change creates a
 traceable diff: nothing is deleted, old memories are flagged with their

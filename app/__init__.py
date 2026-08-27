@@ -1,1 +1,1 @@
-"""DreamKeeper — Memory consolidation agent."""
+"""DreamKeeper: A Memory consolidation agent."""

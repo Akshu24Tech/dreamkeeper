@@ -1,4 +1,4 @@
-"""PLAN node — Generate the consolidation plan (the diff preview).
+"""PLAN node: Generate the consolidation plan (the diff preview).
 
 Takes the detections and produces a set of ConsolidationActions that
 describe exactly what will change, why, and which sources are cited.

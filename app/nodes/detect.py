@@ -1,4 +1,4 @@
-"""DETECT node — Find duplicates, contradictions, and stale entries.
+"""DETECT node: Find duplicates, contradictions, and stale entries.
 
 Uses Gemini to classify whether clustered memories are duplicates,
 contradictions, or just related.  Also flags stale entries by age.

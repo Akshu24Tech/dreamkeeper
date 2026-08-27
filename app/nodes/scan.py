@@ -1,4 +1,4 @@
-"""SCAN node — Load memories from the store and cluster by similarity.
+"""SCAN node: Load memories from the store and cluster by similarity.
 
 This is the first node in the dream cycle.  It loads all active memories,
 computes pairwise similarities, and groups them into semantic clusters.

@@ -28,7 +28,7 @@ from app.nodes.scan import scan
 
 
 # ---------------------------------------------------------------------------
-# Graph state type (plain dict — LangGraph uses TypedDict or dict)
+# Graph state type (plain dict - LangGraph uses TypedDict or dict)
 # ---------------------------------------------------------------------------
 
 def _get_default_state() -> dict:

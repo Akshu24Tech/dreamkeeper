@@ -1,7 +1,7 @@
 """Pydantic models for DreamKeeper.
 
-Every data structure in the dream cycle — from raw memories to consolidation
-diffs to the final report — is defined here as a typed, validated schema.
+Every data structure in the dream cycle from raw memories to consolidation
+diffs to the final report is defined here as a typed, validated schema.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ class OperationType(str, Enum):
 # Core memory
 # ---------------------------------------------------------------------------
 
-class Memory(BaseModel):
+class Memory(BaseModel):    # What do we have?
     """A single memory entry in the store."""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     content: str
@@ -66,7 +66,7 @@ class Memory(BaseModel):
 # Importance scoring
 # ---------------------------------------------------------------------------
 
-class ImportanceScore(BaseModel):
+class ImportanceScore(BaseModel):       # How important is it?
     """Multi-dimensional importance vector for a memory."""
     relevance: float = Field(0.0, ge=0.0, le=1.0, description="How relevant to recent queries")
     frequency: float = Field(0.0, ge=0.0, le=1.0, description="How often accessed")
@@ -79,7 +79,7 @@ class ImportanceScore(BaseModel):
 # Detection results
 # ---------------------------------------------------------------------------
 
-class Detection(BaseModel):
+class Detection(BaseModel):      # What's wrong or interesting about them?
     """A single finding from the detect node."""
     type: DetectionType
     memory_ids: list[str]         # the memories involved
@@ -88,7 +88,7 @@ class Detection(BaseModel):
     suggested_operation: OperationType
 
 
-class MemoryCluster(BaseModel):
+class MemoryCluster(BaseModel):      # Which memories belong together?
     """A group of semantically related memories."""
     cluster_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     memory_ids: list[str]
@@ -100,8 +100,8 @@ class MemoryCluster(BaseModel):
 # Consolidation plan (the DIFF you can read)
 # ---------------------------------------------------------------------------
 
-class ConsolidationAction(BaseModel):
-    """A single planned change — the unit of the preview diff."""
+class ConsolidationAction(BaseModel):     # What should we do?
+    """A single planned change the unit of the preview diff."""
     action_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     operation: OperationType
     source_memory_ids: list[str]  # memories being consolidated
@@ -110,8 +110,8 @@ class ConsolidationAction(BaseModel):
     citations: list[str] = Field(default_factory=list)  # source memory ids cited
 
 
-class ConsolidationPlan(BaseModel):
-    """The full set of proposed changes — shown in preview before execution."""
+class ConsolidationPlan(BaseModel):     # What are we planning to change?
+    """The full set of proposed changes shown in preview before execution."""
     plan_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     actions: list[ConsolidationAction] = Field(default_factory=list)
@@ -128,7 +128,7 @@ class ConsolidationPlan(BaseModel):
 # Dream report (the audit trail)
 # ---------------------------------------------------------------------------
 
-class ActionResult(BaseModel):
+class ActionResult(BaseModel):    # What happened after executing the plan?
     """Result of executing a single consolidation action."""
     action_id: str
     operation: OperationType
@@ -140,8 +140,8 @@ class ActionResult(BaseModel):
     citations: list[str] = Field(default_factory=list)
 
 
-class DreamReport(BaseModel):
-    """Full report of a completed dream cycle — the audit artifact."""
+class DreamReport(BaseModel):    # What happened during the whole dream cycle?
+    """Full report of a completed dream cycle the audit artifact."""
     dream_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
@@ -170,7 +170,7 @@ class DreamReport(BaseModel):
 # LangGraph state
 # ---------------------------------------------------------------------------
 
-class DreamState(BaseModel):
+class DreamState(BaseModel):      # What information is currently flowing through LangGraph?
     """The state that flows through the LangGraph dream cycle."""
     dream_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     memories: list[Memory] = Field(default_factory=list)
