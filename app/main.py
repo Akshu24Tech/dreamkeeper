@@ -33,11 +33,17 @@ _store: ChromaAdapter | None = None
 _dream_reports: dict[str, DreamReport] = {}  # in-memory cache of completed dreams
 
 
+def _get_store() -> ChromaAdapter:
+    global _store
+    if _store is None:
+        persist_dir = os.getenv("CHROMA_PERSIST_DIR", "./chroma_data")
+        _store = ChromaAdapter(persist_dir=persist_dir)
+    return _store
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _store
-    persist_dir = os.getenv("CHROMA_PERSIST_DIR", "./chroma_data")
-    _store = ChromaAdapter(persist_dir=persist_dir)
+    _get_store()
     yield
 
 
@@ -90,30 +96,30 @@ class DreamSummary(BaseModel):
 @app.post("/memories", status_code=201)
 async def add_memory(req: AddMemoryRequest):
     """Add a memory to the store."""
+    store = _get_store()
     memory = Memory(
         content=req.content,
         metadata=req.metadata,
         source=req.source,
     )
-    await _store.upsert(memory)
+    await store.upsert(memory)
     return {"id": memory.id, "status": "stored"}
 
 
 @app.get("/memories")
 async def list_memories(status: str | None = None):
     """List all memories, optionally filtered by status."""
+    store = _get_store()
     mem_status = MemoryStatus(status) if status else None
-    memories = await _store.load_all(status=mem_status)
-    return {
-        "count": len(memories),
-        "memories": [m.model_dump() for m in memories],
-    }
+    memories = await store.load_all(status=mem_status)
+    return [m.model_dump() for m in memories]
 
 
 @app.post("/dream")
 async def trigger_dream(req: TriggerDreamRequest = TriggerDreamRequest()):
     """Trigger a dream cycle."""
-    graph = build_dream_graph(store=_store)
+    store = _get_store()
+    graph = build_dream_graph(store=store)
     initial_state = _get_default_state()
     initial_state["approved"] = req.auto_approve
 
@@ -148,11 +154,12 @@ async def get_dream_report(dream_id: str):
 @app.get("/health")
 async def health():
     """Memory store health metrics."""
-    total = await _store.count()
-    active = await _store.count(status=MemoryStatus.ACTIVE)
-    merged = await _store.count(status=MemoryStatus.MERGED)
-    superseded = await _store.count(status=MemoryStatus.SUPERSEDED)
-    synthesized = await _store.count(status=MemoryStatus.SYNTHESIZED)
+    store = _get_store()
+    total = await store.count()
+    active = await store.count(status=MemoryStatus.ACTIVE)
+    merged = await store.count(status=MemoryStatus.MERGED)
+    superseded = await store.count(status=MemoryStatus.SUPERSEDED)
+    synthesized = await store.count(status=MemoryStatus.SYNTHESIZED)
 
     return HealthResponse(
         total_memories=total,

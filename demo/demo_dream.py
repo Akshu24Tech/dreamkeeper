@@ -17,6 +17,15 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+os.environ["PYTHONUNBUFFERED"] = "1"
+
+# Force UTF-8 on Windows consoles to prevent charmap encoding errors
+if sys.platform == "win32":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
+
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -41,27 +50,28 @@ def _print_header(text: str):
 
 
 def _print_memory(mem: Memory, index: int):
-    status_icon = {
-        "active": "🟢",
-        "merged": "🔵",
-        "superseded": "🟡",
-        "synthesized": "🟣",
-    }.get(mem.status.value, "⚪")
+    status_tag = {
+        "active": "[ACTIVE]",
+        "merged": "[MERGED]",
+        "superseded": "[SUPERSEDED]",
+        "synthesized": "[SYNTHESIZED]",
+    }.get(mem.status.value, "[UNKNOWN]")
+
     age_days = (datetime.now(timezone.utc) - mem.created_at).days
-    print(f"  {status_icon} [{index+1:2d}] {mem.content}")
-    print(f"Status: {mem.status.value} | Age: {age_days}d | Accesses: {mem.access_count}")
+    print(f"  {status_tag:<14} [{index+1:2d}] {mem.content}")
+    print(f"                 Status: {mem.status.value} | Age: {age_days}d | Accesses: {mem.access_count}")
     if mem.merged_into:
-        print(f"merged into {mem.merged_into[:8]}...")
+        print(f"                 -> merged into {mem.merged_into[:8]}...")
     if mem.superseded_by:
-        print(f"superseded by {mem.superseded_by[:8]}...")
+        print(f"                 -> superseded by {mem.superseded_by[:8]}...")
     if mem.synthesized_into:
-        print(f"synthesized into {mem.synthesized_into[:8]}...")
+        print(f"                 -> synthesized into {mem.synthesized_into[:8]}...")
     print()
 
 
 def _print_report(report: DreamReport):
     _print_header("DREAM REPORT")
-    print(f"  Dream ID:        {report.dream_id}")
+    print(f"  Dream ID:         {report.dream_id}")
     print(f"  Memories scanned: {report.memories_scanned}")
     print(f"  Clusters found:   {report.clusters_found}")
     print(f"  Detections:       {len(report.detections)}")
@@ -69,18 +79,18 @@ def _print_report(report: DreamReport):
     print(f"  Actions executed: {report.actions_executed}")
     print()
 
-    print(f"  Results:")
+    print("  Results:")
     print(f"     Merges:     {report.merges_applied}")
     print(f"     Supersedes: {report.supersedes_applied}")
     print(f"     Syntheses:  {report.syntheses_applied}")
     print()
-    print(f"  Reduction: {report.memories_before} → {report.memories_after} active memories ({report.reduction_pct}% reduction)")
+    print(f"  Reduction: {report.memories_before} -> {report.memories_after} active memories ({report.reduction_pct}% reduction)")
     print()
 
     if report.results:
         _print_header("DIFFS (Audit Trail)")
         for r in report.results:
-            icon = "✅" if r.success else "❌"
+            icon = "[OK]" if r.success else "[ERR]"
             print(f"  {icon} {r.operation.value.upper()}")
             print(f"     {r.diff}")
             if r.citations:
@@ -94,7 +104,7 @@ async def main():
     print()
 
     # 1. Load sample memories
-    with open(SAMPLE_FILE) as f:
+    with open(SAMPLE_FILE, encoding="utf-8") as f:
         samples = json.load(f)
 
     # 2. Seed the store
@@ -136,7 +146,7 @@ async def main():
 
     # 4. Run the dream cycle
     _print_header("DREAMING...")
-    print("  Running: scan → detect → plan → execute → report")
+    print("  Running: scan -> detect -> plan -> execute -> report")
     print()
 
     result = await run_dream(store=store, auto_approve=True)
@@ -160,8 +170,11 @@ async def main():
     # Cleanup demo data
     import shutil
     if os.path.exists(DEMO_PERSIST_DIR):
-        shutil.rmtree(DEMO_PERSIST_DIR)
-        print(f"\n  🧹 Cleaned up demo data at {DEMO_PERSIST_DIR}")
+        try:
+            shutil.rmtree(DEMO_PERSIST_DIR, ignore_errors=True)
+            print(f"\n  Cleaned up demo data at {DEMO_PERSIST_DIR}")
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

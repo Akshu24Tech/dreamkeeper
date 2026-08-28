@@ -20,6 +20,7 @@ venv/
 
 # Data
 chroma_data/
+chroma_*/
 *.db
 
 # OS
