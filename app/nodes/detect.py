@@ -1,20 +1,22 @@
 """DETECT node: Find duplicates, contradictions, and stale entries.
 
-Uses Gemini to classify whether clustered memories are duplicates,
-contradictions, or just related.  Also flags stale entries by age.
+Uses Gemini with batch analysis across all clusters to identify duplicates,
+contradictions, and synthesis candidates efficiently in a single LLM call.
 """
 
 from __future__ import annotations
 
+import json
 import os
+import time
 from datetime import datetime, timezone
 
 from google import genai
+from google.genai import errors as genai_errors
 
 from app.models import (
     Detection,
     DetectionType,
-    DreamState,
     Memory,
     MemoryCluster,
     OperationType,
@@ -24,32 +26,56 @@ from app.models import (
 STALE_DAYS = int(os.getenv("STALE_DAYS", "30"))
 
 
-DETECT_PROMPT = """You are analysing a cluster of related memories from an AI agent's memory store.
-Your job is to classify what kind of issue (if any) exists in this cluster.
+BATCH_DETECT_PROMPT = """You are analyzing clusters of semantically related memories from an AI agent's memory store.
+Your goal is to detect redundancy, factual contradictions, and synthesis opportunities across these clusters.
 
-## Memories in this cluster:
-{memories_text}
+## Memory Clusters to analyze:
+{clusters_text}
 
 ## Task
-Analyse these memories and determine:
-1. Are any of them **duplicates** (same fact stated in different words)?
-2. Do any **contradict** each other (conflicting facts about the same topic)?
-3. If they are just related facts that could be **synthesized** into one higher-order summary, say so.
+For each cluster:
+1. Identify **duplicate** facts (same fact stated in different words).
+2. Identify **contradictions** (conflicting/superseded facts, e.g. location changed or database changed).
+3. Identify **clusters** of 2+ related observations that can be synthesized into a higher-order pattern.
 
-Respond in this exact JSON format (no markdown, no extra text):
+Respond in this exact JSON format (no markdown, no preamble):
 {{
     "findings": [
         {{
             "type": "duplicate" | "contradiction" | "cluster",
-            "memory_ids": ["id1", "id2"],
-            "confidence": 0.0 to 1.0,
-            "explanation": "why this was flagged"
+            "memory_ids": ["id_1", "id_2"],
+            "confidence": 0.95,
+            "explanation": "Brief explanation of why this was flagged",
+            "suggested_operation": "merge" | "supersede" | "synthesize"
         }}
     ]
 }}
 
-If the memories are genuinely different and unrelated, return {{"findings": []}}.
+If memories in a cluster are genuinely different and accurate, do not flag them.
 """
+
+
+def _call_gemini_with_retry(client: genai.Client, model: str, prompt: str, max_retries: int = 3) -> str:
+    """Call Gemini with exponential backoff on rate limits."""
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=genai.types.GenerateContentConfig(
+                    temperature=0.1,
+                    response_mime_type="application/json",
+                ),
+            )
+            return response.text
+        except genai_errors.APIError as e:
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                wait_time = (2 ** attempt) * 3 + 2
+                print(f"[detect] Rate limited (429). Retrying in {wait_time}s... (attempt {attempt+1}/{max_retries})")
+                time.sleep(wait_time)
+            else:
+                raise e
+    raise RuntimeError(f"Failed to generate content after {max_retries} attempts.")
 
 
 async def detect(
@@ -80,67 +106,69 @@ async def detect(
                 )
             )
 
-    # --- 2. Cluster-based detection (LLM-assisted) ---
+    # --- 2. Cluster-based detection (single batched LLM call) ---
     if not clusters:
         return {"detections": detections}
 
-    client = genai.Client()
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    client = genai.Client(api_key=api_key)
 
-    for cluster in clusters:
-        # Build the prompt with memory contents
-        memories_text = ""
+    clusters_text = ""
+    for idx, cluster in enumerate(clusters):
+        clusters_text += f"\n### Cluster {idx + 1} (Centroid: {cluster.centroid_content[:60]}):\n"
         for mid in cluster.memory_ids:
             mem = memory_map.get(mid)
             if mem:
-                memories_text += f"- ID: {mid}\n  Content: {mem.content}\n  Created: {mem.created_at.isoformat()}\n\n"
+                clusters_text += f"- ID: {mid}\n  Content: {mem.content}\n  Created: {mem.created_at.isoformat()}\n  Accesses: {mem.access_count}\n"
 
-        prompt = DETECT_PROMPT.format(memories_text=memories_text)
+    prompt = BATCH_DETECT_PROMPT.format(clusters_text=clusters_text)
 
-        try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=genai.types.GenerateContentConfig(
-                    temperature=0.1,
-                    response_mime_type="application/json",
-                ),
+    try:
+        raw_text = _call_gemini_with_retry(client, model_name, prompt)
+        result = json.loads(raw_text)
+
+        type_map = {
+            "duplicate": (DetectionType.DUPLICATE, OperationType.MERGE),
+            "contradiction": (DetectionType.CONTRADICTION, OperationType.SUPERSEDE),
+            "cluster": (DetectionType.CLUSTER, OperationType.SYNTHESIZE),
+            "stale": (DetectionType.STALE, OperationType.SUPERSEDE),
+        }
+
+        for finding in result.get("findings", []):
+            det_type_str = finding.get("type", "duplicate").lower()
+            dtype, default_op = type_map.get(det_type_str, (DetectionType.DUPLICATE, OperationType.MERGE))
+
+            op_str = finding.get("suggested_operation", "").lower()
+            if op_str == "merge":
+                suggested_op = OperationType.MERGE
+            elif op_str == "supersede":
+                suggested_op = OperationType.SUPERSEDE
+            elif op_str == "synthesize":
+                suggested_op = OperationType.SYNTHESIZE
+            else:
+                suggested_op = default_op
+
+            detections.append(
+                Detection(
+                    type=dtype,
+                    memory_ids=finding.get("memory_ids", []),
+                    confidence=float(finding.get("confidence", 0.85)),
+                    explanation=finding.get("explanation", "Detected via memory clustering"),
+                    suggested_operation=suggested_op,
+                )
             )
 
-            import json
-            result = json.loads(response.text)
-
-            for finding in result.get("findings", []):
-                det_type = finding["type"]
-                if det_type == "duplicate":
-                    dtype = DetectionType.DUPLICATE
-                    suggested = OperationType.MERGE
-                elif det_type == "contradiction":
-                    dtype = DetectionType.CONTRADICTION
-                    suggested = OperationType.SUPERSEDE
-                else:
-                    dtype = DetectionType.CLUSTER
-                    suggested = OperationType.SYNTHESIZE
-
-                detections.append(
-                    Detection(
-                        type=dtype,
-                        memory_ids=finding["memory_ids"],
-                        confidence=finding.get("confidence", 0.8),
-                        explanation=finding.get("explanation", ""),
-                        suggested_operation=suggested,
-                    )
-                )
-        except Exception as e:
-            # Non-fatal: log and continue with what we have
-            print(f"[detect] Warning: LLM detection failed for cluster {cluster.cluster_id}: {e}")
-            # Still mark the cluster as synthesis candidate
+    except Exception as e:
+        print(f"[detect] Warning: LLM batch detection failed: {e}")
+        # Fallback: flag clusters with >= 3 memories as synthesis candidates
+        for cluster in clusters:
             if len(cluster.memory_ids) >= 3:
                 detections.append(
                     Detection(
                         type=DetectionType.CLUSTER,
                         memory_ids=cluster.memory_ids,
                         confidence=0.5,
-                        explanation=f"Cluster of {len(cluster.memory_ids)} similar memories (LLM fallback)",
+                        explanation=f"Cluster of {len(cluster.memory_ids)} similar memories (heuristic fallback)",
                         suggested_operation=OperationType.SYNTHESIZE,
                     )
                 )

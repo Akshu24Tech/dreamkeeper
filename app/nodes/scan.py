@@ -12,7 +12,7 @@ from app.models import DreamState, MemoryCluster, MemoryStatus
 
 # Memories with cosine similarity above this threshold are placed in the
 # same cluster.  Tuneable via env SIMILARITY_THRESHOLD.
-DEFAULT_SIMILARITY_THRESHOLD = 0.85
+DEFAULT_SIMILARITY_THRESHOLD = 0.55
 
 
 async def scan(

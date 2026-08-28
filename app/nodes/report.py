@@ -28,6 +28,9 @@ async def report(
 
     dream_id: str = state.get("dream_id", "unknown")
     memories: list[Memory] = state.get("memories", [])
+    if not memories:
+        memories = await store.load_all(status=None)
+
     detections: list[Detection] = state.get("detections", [])
     plan: ConsolidationPlan | None = state.get("plan")
     results: list[ActionResult] = state.get("results", [])
@@ -37,6 +40,7 @@ async def report(
 
     # Count active memories after consolidation
     active_after = await store.count(status=MemoryStatus.ACTIVE)
+    total_before = len(memories)
 
     dream_report = DreamReport(
         dream_id=dream_id,

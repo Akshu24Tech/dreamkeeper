@@ -177,9 +177,11 @@ class ChromaAdapter(MemoryStoreAdapter):
         )
 
         embeddings = {}
-        for i, mid in enumerate(results["ids"]):
-            if results["embeddings"] and results["embeddings"][i]:
-                embeddings[mid] = results["embeddings"][i]
+        raw_embeddings = results.get("embeddings")
+        if raw_embeddings is not None and len(raw_embeddings) > 0:
+            for i, mid in enumerate(results["ids"]):
+                if i < len(raw_embeddings) and raw_embeddings[i] is not None:
+                    embeddings[mid] = raw_embeddings[i]
 
         # Compute cosine similarity
         import numpy as np

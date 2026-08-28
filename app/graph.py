@@ -2,7 +2,7 @@
 
 Wires the five dream cycle nodes into a state machine:
 
-    scan → detect → plan → [human_review] → execute → report
+    scan -> detect -> plan -> [human_review] -> execute -> report
 
 The human_review gate is a conditional edge: if `approved` is True (default,
 auto-approve mode), it proceeds directly to execute.  If False, the graph
@@ -13,13 +13,20 @@ from __future__ import annotations
 
 import os
 import uuid
-from functools import partial
-from typing import Any
+from typing import Any, Optional, TypedDict
 
 from langgraph.graph import END, StateGraph
 
 from app.adapters.base import MemoryStoreAdapter
 from app.adapters.chroma import ChromaAdapter
+from app.models import (
+    ActionResult,
+    ConsolidationPlan,
+    Detection,
+    DreamReport,
+    Memory,
+    MemoryCluster,
+)
 from app.nodes.detect import detect
 from app.nodes.execute import execute
 from app.nodes.plan import plan
@@ -28,8 +35,23 @@ from app.nodes.scan import scan
 
 
 # ---------------------------------------------------------------------------
-# Graph state type (plain dict - LangGraph uses TypedDict or dict)
+# Graph state type
 # ---------------------------------------------------------------------------
+
+class DreamGraphState(TypedDict, total=False):
+    dream_id: str
+    memories: list[Memory]
+    clusters: list[MemoryCluster]
+    detections: list[Detection]
+    plan: Optional[ConsolidationPlan]
+    approved: bool
+    results: list[ActionResult]
+    merges_applied: int
+    supersedes_applied: int
+    syntheses_applied: int
+    report: Optional[DreamReport]
+    error: Optional[str]
+
 
 def _get_default_state() -> dict:
     return {
@@ -53,37 +75,36 @@ def _get_default_state() -> dict:
 # ---------------------------------------------------------------------------
 
 def _make_scan_node(store: MemoryStoreAdapter):
-    threshold = float(os.getenv("SIMILARITY_THRESHOLD", "0.85"))
-
-    async def _scan(state: dict) -> dict:
+    async def _scan(state: DreamGraphState) -> dict:
+        threshold = float(os.getenv("SIMILARITY_THRESHOLD", "0.55"))
         return await scan(state, store=store, similarity_threshold=threshold)
 
     return _scan
 
 
 def _make_detect_node():
-    async def _detect(state: dict) -> dict:
+    async def _detect(state: DreamGraphState) -> dict:
         return await detect(state)
 
     return _detect
 
 
 def _make_plan_node():
-    async def _plan(state: dict) -> dict:
+    async def _plan(state: DreamGraphState) -> dict:
         return await plan(state)
 
     return _plan
 
 
 def _make_execute_node(store: MemoryStoreAdapter):
-    async def _execute(state: dict) -> dict:
+    async def _execute(state: DreamGraphState) -> dict:
         return await execute(state, store=store)
 
     return _execute
 
 
 def _make_report_node(store: MemoryStoreAdapter):
-    async def _report(state: dict) -> dict:
+    async def _report(state: DreamGraphState) -> dict:
         return await report(state, store=store)
 
     return _report
@@ -93,7 +114,7 @@ def _make_report_node(store: MemoryStoreAdapter):
 # Conditional edges
 # ---------------------------------------------------------------------------
 
-def _should_continue_after_scan(state: dict) -> str:
+def _should_continue_after_scan(state: DreamGraphState) -> str:
     """Skip the rest if there are fewer than 2 memories."""
     memories = state.get("memories", [])
     if len(memories) < 2:
@@ -101,7 +122,7 @@ def _should_continue_after_scan(state: dict) -> str:
     return "detect"
 
 
-def _should_execute(state: dict) -> str:
+def _should_execute(state: DreamGraphState) -> str:
     """Check the HITL gate."""
     plan = state.get("plan")
     approved = state.get("approved", True)
@@ -119,24 +140,14 @@ def _should_execute(state: dict) -> str:
 
 def build_dream_graph(
     store: MemoryStoreAdapter | None = None,
-) -> StateGraph:
-    """Construct the DreamKeeper LangGraph pipeline.
-
-    Parameters
-    ----------
-    store : MemoryStoreAdapter
-        The memory store backend.  Defaults to ChromaDB if not provided.
-
-    Returns
-    -------
-    A compiled LangGraph that can be invoked with `graph.ainvoke(state)`.
-    """
+) -> Any:
+    """Construct the DreamKeeper LangGraph pipeline."""
     if store is None:
         persist_dir = os.getenv("CHROMA_PERSIST_DIR", "./chroma_data")
         store = ChromaAdapter(persist_dir=persist_dir)
 
     # -- Build graph --
-    builder = StateGraph(dict)
+    builder = StateGraph(DreamGraphState)
 
     builder.add_node("scan", _make_scan_node(store))
     builder.add_node("detect", _make_detect_node())
